@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.urls import reverse
 
-from .forms import NewTopicForm, PostForm
+from .forms import NewTopicForm, PostForm, BoardForm
 from .models import Board, Post, Topic
 
 
@@ -15,6 +15,7 @@ class BoardListView(ListView):
     model = Board
     context_object_name = 'boards'
     template_name = 'home.html'
+
 
 
 class TopicListView(ListView):
@@ -52,6 +53,17 @@ class PostListView(ListView):
         self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
         queryset = self.topic.posts.order_by('created_at')
         return queryset
+@login_required
+def new_board(request):
+    if request.method == 'POST':
+        form = BoardForm(request.POST)
+        if form.is_valid():
+            board = form.save(commit=False)
+            board.save()
+            return redirect('home')
+    else:
+        form = BoardForm()
+    return render(request, 'new_board.html', { 'form': form})
 
 
 @login_required
